@@ -29,3 +29,14 @@ flowchart LR
     Frontend -- http --> Middle -- http -->  Backend 
     
 ```
+___
+### Содержание
+* [Установка](#installation)
+* [Возможности](#features)
+* [Технологии](#technologies)
+* [Лицензия](#license)
+
+
+### <a id="installation">Установка приложения</a>
+
+Продолжение следует...
