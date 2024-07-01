@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+
+  gpbdb:
+    image: 'postgres:16.0'
+    container_name: 'gpbdb'
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+    ports:
+      - '5446:5432'
