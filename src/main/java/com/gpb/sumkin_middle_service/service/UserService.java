@@ -2,14 +2,13 @@ package com.gpb.sumkin_middle_service.service;
 
 import com.gpb.sumkin_middle_service.dto.UserDto;
 import com.gpb.sumkin_middle_service.dto.GetUserDto;
-import com.gpb.sumkin_middle_service.entities.MyError;
 import com.gpb.sumkin_middle_service.entities.UserGpb;
-import com.gpb.sumkin_middle_service.repositories.MyErrorRepository;
 import com.gpb.sumkin_middle_service.repositories.UserGpbRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -20,13 +19,14 @@ import java.util.UUID;
 public class UserService {
 
     private final UserGpbRepository userRepository;
-    private final MyErrorRepository myErrorRepository;
+    private final AccountService accountService;
 
+    @Transactional
     public ResponseEntity registerUser(UserDto userDto) {
         Long tgId = userDto.getId();
         String tgUsername = userDto.getTgUsername();
         Optional<UserGpb> userGpb = userRepository.findByTgId(tgId);
-        if (userGpb.isEmpty()) {
+        if (!isRegistered(tgId)) {
             UserGpb user = UserGpb.builder()
                     .id(UUID.randomUUID())
                     .tgId(tgId)
@@ -39,7 +39,7 @@ public class UserService {
         } else {
             String message = "Пользователь c tgId" + tgId + "уже зарегистрирован";
             log.error(message);
-            return getMyErrorResponseEntity(message, 409);
+            return accountService.getMyErrorResponseEntity(message, 409, "USER_ALREADY_EXISTS");
         }
     }
 
@@ -48,7 +48,7 @@ public class UserService {
         if (userGpb.isEmpty()) {
             String message = "Пользователь c tgId " + tgId + " не зарегистрирован";
             log.error(message);
-            return getMyErrorResponseEntity(message, 404);
+            return accountService.getMyErrorResponseEntity(message, 404, "USER_NOT_FOUND");
         } else {
             return ResponseEntity
                     .status(200)
@@ -62,7 +62,7 @@ public class UserService {
         if (userGpb.isEmpty()) {
             String message = "Пользователь c tgName " + tgName + " не зарегистрирован";
             log.error(message);
-            return getMyErrorResponseEntity(message, 404);
+            return accountService.getMyErrorResponseEntity(message, 404, "USER_NOT_FOUND");
         } else {
             return ResponseEntity
                     .status(200)
@@ -70,16 +70,15 @@ public class UserService {
         }
     }
 
-    private ResponseEntity<MyError> getMyErrorResponseEntity(String message, int code) {
-        MyError error = MyError.builder()
-                .message(message)
-                .type("USER_NOT_FOUND")
-                .code(code)
-                .traceId(UUID.randomUUID())
-                .build();
-        myErrorRepository.save(error);
-        return ResponseEntity
-                .status(code)
-                .body(error);
+    public Boolean isRegistered(String tgName) {
+        Optional<UserGpb> userGpb = userRepository.findByTgUsername(tgName);
+        return userGpb.isPresent();
     }
+
+    public Boolean isRegistered(Long tgId) {
+        Optional<UserGpb> userGpb = userRepository.findByTgId(tgId);
+        return userGpb.isPresent();
+    }
+
+
 }

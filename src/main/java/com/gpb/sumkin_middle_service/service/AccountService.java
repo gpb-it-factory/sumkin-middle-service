@@ -1,19 +1,20 @@
 package com.gpb.sumkin_middle_service.service;
 
 import com.gpb.sumkin_middle_service.dto.AccountDto;
-import com.gpb.sumkin_middle_service.dto.GetAccountDto;
 import com.gpb.sumkin_middle_service.dto.RegAccountDto;
 import com.gpb.sumkin_middle_service.entities.AccountGpb;
 import com.gpb.sumkin_middle_service.entities.MyError;
+import com.gpb.sumkin_middle_service.entities.Transfer;
 import com.gpb.sumkin_middle_service.entities.UserGpb;
-import com.gpb.sumkin_middle_service.logging.ActionAudit;
 import com.gpb.sumkin_middle_service.repositories.AccountGpbRepository;
 import com.gpb.sumkin_middle_service.repositories.MyErrorRepository;
+import com.gpb.sumkin_middle_service.repositories.TransferRepository;
 import com.gpb.sumkin_middle_service.repositories.UserGpbRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -28,17 +29,20 @@ public class AccountService {
     private final UserGpbRepository userRepository;
     private final MyErrorRepository myErrorRepository;
     private final AccountGpbRepository accountGpbRepository;
+    private final TransferRepository transferRepository;
 
+
+    @Transactional
     public ResponseEntity registerAccount(Long tgId, RegAccountDto regAccountDto) {
         Optional<UserGpb> userGpb = userRepository.findByTgId(tgId);
         if (userGpb.isEmpty()) {
             String message = "Пользователь c tgId " + tgId + " не зарегистрирован";
             log.error(message);
-            return getMyErrorResponseEntity(message, 404);
-        } else if (!accountGpbRepository.findByTgId(tgId).isEmpty()) {
+            return getMyErrorResponseEntity(message, 404, "USER_NOT_FOUND");
+        } else if (hasAccount(tgId)) {
             String message = "Пользователь c tgId " + tgId + " уже имеет счет, а он может быть только один";
             log.error(message);
-            return getMyErrorResponseEntity(message, 409);
+            return getMyErrorResponseEntity(message, 409, "ACCOUNT_ALREADY_EXISTS");
         } else {
             AccountGpb account = AccountGpb.builder()
                     .id(UUID.randomUUID())
@@ -56,35 +60,27 @@ public class AccountService {
     }
 
     public ResponseEntity getAccountsByTgId(Long tgId) {
-        Optional<UserGpb> userGpb = userRepository.findByTgId(tgId);
         List<AccountDto> accountGpb = accountGpbRepository.findByTgId(tgId);
-        if (userGpb.isEmpty()) {
+        if (accountGpb.isEmpty()) {
             String message = "Пользователь c tgId " + tgId + " не зарегистрирован";
             log.error(message);
-            return getMyErrorResponseEntity(message, 404);
-        } else if (accountGpb.isEmpty()) {
+            return getMyErrorResponseEntity(message, 404, "USER_NOT_FOUND");
+        } else if (!hasAccount(tgId)) {
             String message = "У пользователь c tgId " + tgId + " нет счетов";
             log.error(message);
-            return getMyErrorResponseEntity(message, 409);
+            return getMyErrorResponseEntity(message, 409, "ACCOUNT_NOT_FOUND");
         } else {
-            AccountGpb account = AccountGpb.builder()
-                    .id(UUID.randomUUID())
-                    .userId(userGpb.get().getId())
-                    .accountName(accountGpb.get(0).getAccountName())
-                    .amount(accountGpb.get(0).getAmount())
-                    .build();
-            accountGpbRepository.save(account);
             return ResponseEntity
-                    .status(201)
-                    .body(new GetAccountDto(account.getId()));
+                    .status(200)
+                    .body(accountGpb.get(0));
         }
     }
 
-    @ActionAudit(value = ActionAudit.ACCOUNT_ACTION)
-    private ResponseEntity<MyError> getMyErrorResponseEntity(String message, int code) {
+    public ResponseEntity<MyError> getMyErrorResponseEntity(String message, int code,
+    String type) {
         MyError error = MyError.builder()
                 .message(message)
-                .type("USER_NOT_FOUND")
+                .type(type)
                 .code(code)
                 .traceId(UUID.randomUUID())
                 .build();
@@ -92,5 +88,37 @@ public class AccountService {
         return ResponseEntity
                 .status(code)
                 .body(error);
+    }
+
+    public Boolean hasAccount(String username) {
+        return !accountGpbRepository.findByTgUsername(username).isEmpty();
+    }
+
+    public Boolean hasAccount(Long tgId) {
+        return !accountGpbRepository.findByTgId(tgId).isEmpty();
+    }
+
+    public BigDecimal getBalance(String username) {
+        return accountGpbRepository.findByTgUsername(username).get(0).getAmount();
+    }
+
+    @Transactional
+    public UUID performTransfer(AccountGpb from, AccountGpb to, BigDecimal amount) {
+        from.setAmount(from.getAmount().subtract(amount));
+        to.setAmount(to.getAmount().add(amount));
+        accountGpbRepository.save(from);
+        accountGpbRepository.save(to);
+        Transfer transfer = Transfer.builder()
+                .id(UUID.randomUUID())
+                .fromAccount(from.getId())
+                .toAccount(to.getId())
+                .amount(amount)
+                .build();
+        transferRepository.save(transfer);
+        return transfer.getId();
+    }
+
+    public AccountGpb getAccountByUsername(String username) {
+        return accountGpbRepository.findByUsername(username);
     }
 }

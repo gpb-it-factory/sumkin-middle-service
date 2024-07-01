@@ -11,6 +11,7 @@ public @interface ActionAudit {
 
     String USER_ACTION = "РАБОТА С ДАННЫМИ ПОЛЬЗОВАТЕЛЯ";
     String ACCOUNT_ACTION = "РАБОТА СО СЧЕТАМИ";
+    String TRANSFER_ACTION = "РАБОТА С ПЕРЕВОДАМИ";
 
     String value();
 }
