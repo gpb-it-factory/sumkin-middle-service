@@ -20,6 +20,6 @@ public class MyError {
     private String type;
     private int code;
     @Id
-    @Column(nullable = false)
+    @Column(nullable = false, name = "trace_id")
     private UUID traceId;
 }

@@ -1,5 +1,6 @@
 package com.gpb.sumkin_middle_service.entities;
 
+import com.gpb.sumkin_middle_service.dto.AccountDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,6 +10,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
+@IdClass(AccountDto.class)
 @Table(name = "account_gpb",schema = "gpb")
 @Builder
 @NoArgsConstructor
@@ -19,5 +21,6 @@ public class AccountGpb {
     @Column(name = "user_id")
     private UUID userId;
     private BigDecimal amount;
+    @Column(name = "account_name")
     private String accountName;
 }

@@ -5,15 +5,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-
 @Setter
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class TransferDto {
+public class RegAccountDto {
 
-    private String from;
-    private String to;
-    private BigDecimal amount;
+    private String accountName;
 }
