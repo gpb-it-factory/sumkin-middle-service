@@ -12,5 +12,6 @@ import java.util.UUID;
 public interface UserGpbRepository extends PagingAndSortingRepository<UserGpb, UUID>,
         JpaRepository<UserGpb, UUID> {
 
-    Optional<UserGpb> getByTgId(Long tgId);
+    Optional<UserGpb> findByTgId(Long tgId);
+    Optional<UserGpb> findByTgUsername(String tgUsername);
 }
