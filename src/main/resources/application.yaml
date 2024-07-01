@@ -5,8 +5,8 @@ spring:
       name: sumkin-middle-service
     datasource:
       url: jdbc:postgresql://localhost:5446/gpbdb?schema=gpb
-      username: sumkin
-      password: 09062024
+      username: {POSTGRES_USER}
+      password: {POSTGRES_PASSWORD}
     sql:
       init:
         mode: always
