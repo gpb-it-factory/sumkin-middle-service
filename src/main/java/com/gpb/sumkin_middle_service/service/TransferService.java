@@ -2,13 +2,10 @@ package com.gpb.sumkin_middle_service.service;
 
 import com.gpb.sumkin_middle_service.dto.RegisterTransferDto;
 import com.gpb.sumkin_middle_service.entities.AccountGpb;
-import com.gpb.sumkin_middle_service.entities.Transfer;
-import com.gpb.sumkin_middle_service.logging.ActionAudit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -34,7 +31,7 @@ public class TransferService {
                 BigDecimal amount = registerTransferDto.getAmount();
                 UUID transferId = accountService.performTransfer(fromAccount, toAccount, amount);
                 return ResponseEntity
-                        .status(201)
+                        .status(200)
                         .body(transferId);
             } else {
                 String message = "Недостаточно средств";
@@ -45,7 +42,8 @@ public class TransferService {
             String message = "Все пользователи должны быть зарегистрированы и иметь счет";
             log.error(message);
             return accountService.getMyErrorResponseEntity(message, 404, "USER_NOT_FOUND");
-        }    }
+        }
+    }
 
 
     private boolean transferPossible(RegisterTransferDto registerTransferDto) {

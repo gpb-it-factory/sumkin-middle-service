@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,11 +34,12 @@ public class AccountService {
     @Transactional
     public ResponseEntity registerAccount(Long tgId, RegAccountDto regAccountDto) {
         Optional<UserGpb> userGpb = userRepository.findByTgId(tgId);
+        Optional<AccountGpb> accountGpb = accountGpbRepository.findByTgId(tgId);
         if (userGpb.isEmpty()) {
             String message = "Пользователь c tgId " + tgId + " не зарегистрирован";
             log.error(message);
             return getMyErrorResponseEntity(message, 404, "USER_NOT_FOUND");
-        } else if (hasAccount(tgId)) {
+        } else if (accountGpb.isPresent()) {
             String message = "Пользователь c tgId " + tgId + " уже имеет счет, а он может быть только один";
             log.error(message);
             return getMyErrorResponseEntity(message, 409, "ACCOUNT_ALREADY_EXISTS");
@@ -47,6 +47,7 @@ public class AccountService {
             AccountGpb account = AccountGpb.builder()
                     .id(UUID.randomUUID())
                     .userId(userGpb.get().getId())
+                    .tgId(tgId)
                     .amount(BigDecimal.valueOf(5000))
                     .accountName(regAccountDto.getAccountName())
                     .build();
@@ -60,19 +61,20 @@ public class AccountService {
     }
 
     public ResponseEntity getAccountsByTgId(Long tgId) {
-        List<AccountDto> accountGpb = accountGpbRepository.findByTgId(tgId);
-        if (accountGpb.isEmpty()) {
+        Optional<UserGpb> userGpb = userRepository.findByTgId(tgId);
+        Optional<AccountGpb> accountGpb = accountGpbRepository.findByTgId(tgId);
+        if (userGpb.isEmpty()) {
             String message = "Пользователь c tgId " + tgId + " не зарегистрирован";
             log.error(message);
             return getMyErrorResponseEntity(message, 404, "USER_NOT_FOUND");
-        } else if (!hasAccount(tgId)) {
-            String message = "У пользователь c tgId " + tgId + " нет счетов";
+        } else if (accountGpb.isEmpty()) {
+            String message = "У пользователя c tgId " + tgId + " нет счетов";
             log.error(message);
             return getMyErrorResponseEntity(message, 409, "ACCOUNT_NOT_FOUND");
         } else {
             return ResponseEntity
                     .status(200)
-                    .body(accountGpb.get(0));
+                    .body(accountGpb.get());
         }
     }
 
@@ -92,10 +94,6 @@ public class AccountService {
 
     public Boolean hasAccount(String username) {
         return !accountGpbRepository.findByTgUsername(username).isEmpty();
-    }
-
-    public Boolean hasAccount(Long tgId) {
-        return !accountGpbRepository.findByTgId(tgId).isEmpty();
     }
 
     public BigDecimal getBalance(String username) {
