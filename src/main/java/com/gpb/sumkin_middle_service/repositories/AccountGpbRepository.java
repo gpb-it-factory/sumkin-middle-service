@@ -14,13 +14,6 @@ import java.util.UUID;
 @Repository
 public interface AccountGpbRepository extends JpaRepository<AccountGpb, UUID> {
 
-
-//    @Query(value = """
-//            SELECT new AccountDto(a.id, a.accountName, a.amount)
-//            FROM AccountGpb a, UserGpb u
-//            WHERE u.tgId = :tgId """)
-//    List<AccountDto> findByTgId(@Param("tgId") Long tgId);
-
     @Query(value = """ 
             SELECT new AccountDto(a.id, a.accountName, a.amount)
             FROM AccountGpb a, UserGpb u
