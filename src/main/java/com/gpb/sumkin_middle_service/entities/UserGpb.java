@@ -13,6 +13,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 public class UserGpb {
     @Id
     @Column(nullable = false)

@@ -13,6 +13,8 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
+@ToString
 public class AccountGpb {
     @Id
     private UUID id;

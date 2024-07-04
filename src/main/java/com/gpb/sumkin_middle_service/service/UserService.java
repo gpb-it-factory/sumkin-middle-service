@@ -6,10 +6,13 @@ import com.gpb.sumkin_middle_service.entities.UserGpb;
 import com.gpb.sumkin_middle_service.repositories.UserGpbRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -37,7 +40,7 @@ public class UserService {
                     .status(201)
                     .body(new GetUserDto(user.getId()));
         } else {
-            String message = "Пользователь c tgId" + tgId + "уже зарегистрирован";
+            String message = "Пользователь c tgId " + tgId + "уже зарегистрирован";
             log.error(message);
             return accountService.getMyErrorResponseEntity(message, 409, "USER_ALREADY_EXISTS");
         }
@@ -81,4 +84,8 @@ public class UserService {
     }
 
 
+    public List<UserGpb> getAllUsers(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return userRepository.findAll(pageable).getContent();
+    }
 }

@@ -2,12 +2,17 @@ package com.gpb.sumkin_middle_service.service;
 
 import com.gpb.sumkin_middle_service.dto.RegisterTransferDto;
 import com.gpb.sumkin_middle_service.entities.AccountGpb;
+import com.gpb.sumkin_middle_service.entities.Transfer;
+import com.gpb.sumkin_middle_service.repositories.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -16,6 +21,7 @@ import java.util.UUID;
 public class TransferService {
     private final UserService userService;
     private final AccountService accountService;
+    private final TransferRepository transferRepository;
 
     public ResponseEntity transfer(RegisterTransferDto registerTransferDto) {
         String from = registerTransferDto.getFrom();
@@ -49,5 +55,10 @@ public class TransferService {
     private boolean transferPossible(RegisterTransferDto registerTransferDto) {
         return accountService.getBalance(registerTransferDto.getFrom())
                 .compareTo(registerTransferDto.getAmount()) >= 0;
+    }
+
+    public List<Transfer> getAllTransfers(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return transferRepository.findAll(pageable).getContent();
     }
 }

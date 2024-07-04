@@ -12,11 +12,14 @@ import com.gpb.sumkin_middle_service.repositories.TransferRepository;
 import com.gpb.sumkin_middle_service.repositories.UserGpbRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -118,5 +121,10 @@ public class AccountService {
 
     public AccountGpb getAccountByUsername(String username) {
         return accountGpbRepository.findByUsername(username);
+    }
+
+    public List<AccountGpb> getAllAccounts(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return accountGpbRepository.findAll(pageable).getContent();
     }
 }
